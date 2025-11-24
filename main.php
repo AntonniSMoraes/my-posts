@@ -41,21 +41,25 @@ mysqli_close($conn);
             <article>
                 <?php foreach ($posts as $post): ?>
                     <?php if($post['flag'] === '' || $post['flag'] === 'post'): ?>
-                    <article style="margin-bottom: 1rem; padding:1rem; background:#334; border-radius: .5rem;">
-                        <h2><?= $post['titulo'] ?></h2>
-                        <article style="
-                            display: flex;
-                            justify-content: space-between;
-                        ">
-                            <p style="margin: 0;"><strong>User:</strong> <?= $post['autor'] ?></p>
-                            <p style="margin: 0;"><?= $post['data'] ?></p>
+                    <a href="post.php?id=<?= $post['id'] ?>" style="text-decoration: none; color: inherit;">
+                        <article style="margin-bottom: 1rem; padding:1rem; background:#334; border-radius: .5rem; cursor: pointer; transition: background 0.3s;" 
+                                 onmouseover="this.style.background='#445'" 
+                                 onmouseout="this.style.background='#334'">
+                            <h2><?= $post['titulo'] ?></h2>
+                            <article style="
+                                display: flex;
+                                justify-content: space-between;
+                            ">
+                                <p style="margin: 0;"><strong>User:</strong> <?= $post['autor'] ?></p>
+                                <p style="margin: 0;"><?= $post['data'] ?></p>
+                            </article>
+                            <p style="
+                                white-space: normal;
+                                word-break: break-word;
+                                overflow-wrap: break-word;
+                            "><?= $post['conteudo'] ?></p>
                         </article>
-                        <p style="
-                            white-space: normal;
-                            word-break: break-word;
-                            overflow-wrap: break-word;
-                        "><?= $post['conteudo'] ?></p>
-                    </article>
+                    </a>
                     <!-- <article>
                         <?php foreach ($posts as $coment): ?>
                             <?php if($post['id'] === $coment['id_flag']): ?>
