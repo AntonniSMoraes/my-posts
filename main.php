@@ -1,14 +1,24 @@
 <?php
 include("conect.php");
-$sql = 'SELECT * from posts';
-$result = mysqli_query($conn, $sql);
-$posts = mysqli_fetch_all($result, MYSQLI_ASSOC);
-// print_r($posts);
 
-$count = 0;
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-mysqli_free_result($result);
-mysqli_close($conn);
+if(!isset($_SESSION["user_id"])){
+    header("Location: login.php");
+    exit();
+} else {
+    $sql = 'SELECT * from posts';
+    $result = mysqli_query($conn, $sql);
+    $posts = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    // print_r($posts);
+    
+    $count = 0;
+    
+    mysqli_free_result($result);
+    mysqli_close($conn);
+}
 ?>
 
 <!DOCTYPE html>
@@ -20,7 +30,25 @@ mysqli_close($conn);
     <title>Home</title>
 </head>
 
-<body>
+<body style="margin: 0; padding: 0; width: 100vw;">
+    <header style="
+        display: flex;
+        width: calc(100% - 2rem);
+        background-color: lightgray;
+        padding: 1rem;
+    ">
+        <a href="/main.php" style="
+            display: flex;
+            width: 40px;
+            height: 40px;
+            border-radius: 100%;
+            justify-content: center;
+            align-items: center;
+            background-color: darkcyan;
+        ">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z"/></svg>
+        </a>
+    </header>
     <section style="
             display: flex;
             flex-direction: column;
@@ -40,34 +68,59 @@ mysqli_close($conn);
             ">
             <article>
                 <?php foreach ($posts as $post): ?>
-                    <?php if($post['flag'] === '' || $post['flag'] === 'post'): ?>
-                    <article style="margin-bottom: 1rem; padding:1rem; background:#334; border-radius: .5rem;">
-                        <h2><?= $post['titulo'] ?></h2>
+                    <?php if ($post['flag'] === '' || $post['flag'] === 'post'): ?>
+
                         <article style="
-                            display: flex;
-                            justify-content: space-between;
+                                margin-bottom: 1rem;
+                                padding:1rem;
+                                <?php 
+                                    if($_SESSION['nome'] === $post['autor']){
+                                        echo 'background: darkcyan;';
+                                    }else {
+                                        echo 'background:#334;';
+                                    }
+                                ?>
+                                border-radius: .5rem;
                         ">
-                            <p style="margin: 0;"><strong>User:</strong> <?= $post['autor'] ?></p>
-                            <p style="margin: 0;"><?= $post['data'] ?></p>
+                            <article style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            ">
+                                <h2><?= $post['titulo'] ?></h2>
+                                <a href="/post.php?id=<?= $post['ID'] ?>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>
+                                </a>
+                            </article>
+
+                            <article style="
+                                display: flex;
+                                justify-content: space-between;
+                            ">
+                                <p style="margin: 0;"><strong>User:</strong> <?= $post['autor'] ?></p>
+                                <p style="margin: 0;"><?= $post['data'] ?></p>
+                            </article>
+<!--                             
+                            <p style="
+                                white-space: normal;
+                                word-break: break-word;
+                                overflow-wrap: break-word;
+                            ">
+                                <?= $post['conteudo'] ?>
+                            </p> -->
                         </article>
-                        <p style="
-                            white-space: normal;
-                            word-break: break-word;
-                            overflow-wrap: break-word;
-                        "><?= $post['conteudo'] ?></p>
-                    </article>
-                    <!-- <article>
+                        <!-- <article>
                         <?php foreach ($posts as $coment): ?>
-                            <?php if($post['id'] === $coment['id_flag']): ?>
+                            <?php if ($post['id'] === $coment['id_flag']): ?>
                                 $count+=1;
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </article> -->
-                    <?php
-                    if (count($posts) > 1) {
-                        echo '<hr style="color: white;"/>';
-                    }
-                    ?>
+                        <?php
+                        if (count($posts) > 1) {
+                            echo '<hr style="color: white;"/>';
+                        }
+                        ?>
                     <?php endif; ?>
                 <?php endforeach; ?>
             </article>

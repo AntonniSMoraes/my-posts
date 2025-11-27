@@ -1,17 +1,27 @@
 <?php
     include("conect.php");
 
-    if(isset($_POST["enviar"])){
-        $titulo = mysqli_real_escape_string($conn, $_POST["titulo"]);
-        $autor = mysqli_real_escape_string($conn, $_POST["autor"]);
-        $conteudo = mysqli_real_escape_string($conn, $_POST["conteudo"]);
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
 
-        $sql = "INSERT INTO posts(titulo, autor, conteudo) VALUES ('$titulo', '$autor', '$conteudo')";
+    if(!isset($_SESSION["user_id"])){
+        header("Location: login.php");
+        exit();
+    } else {
+        if(isset($_POST["enviar"])){
+            $titulo = mysqli_real_escape_string($conn, $_POST["titulo"]);
+            // $autor = mysqli_real_escape_string($conn, $_POST["autor"]);
+            $autor = $_SESSION["nome"];
+            $conteudo = mysqli_real_escape_string($conn, $_POST["conteudo"]);
 
-        if(mysqli_query($conn, $sql)){
-            header('Location: main.php');
-        } else {
-            echo 'Erro de query: '.mysqli_error($conn);
+            $sql = "INSERT INTO posts(titulo, autor, conteudo, flag, id_flag) VALUES ('$titulo', '$autor', '$conteudo', '', 0)";
+
+            if(mysqli_query($conn, $sql)){
+                header('Location: main.php');
+            } else {
+                echo 'Erro de query: '.mysqli_error($conn);
+            }
         }
     }
 ?>
@@ -45,10 +55,6 @@
             <article style="display: flex; flex-direction: column; width: 300px; justify-content: space-between;">
                 <label for="titulo">Título</label>
                 <input type="text" name="titulo" id="titulo" />
-            </article>
-            <article style="display: flex; flex-direction: column; width: 300px; justify-content: space-between;">
-                <label for="autor">Autor</label>
-                <input type="text" name="autor" id="autor" />
             </article>
             <article style="display: flex; flex-direction: column; width: 100%; justify-content: space-between;">
                 <label for="conteudo">Conteúdo</label>
