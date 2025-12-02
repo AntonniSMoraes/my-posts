@@ -1,10 +1,8 @@
 <?php
-include("conect.php");
+include("./connections/connect.php");
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 if(!isset($_SESSION["user_id"])){
     header("Location: login.php");
     exit();
@@ -25,12 +23,12 @@ if(!isset($_SESSION["user_id"])){
 
     if (isset($_POST["enviar"])) {
         $id = mysqli_real_escape_string($conn, $_GET['id']);
-
+        $userId = intval($_SESSION['user_id']);
         $titulo = mysqli_real_escape_string($conn, $_POST["titulo"]);
-        $autor = mysqli_real_escape_string($conn, $_POST["autor"]);
+        $autor = $_SESSION["nome"];
         $conteudo = mysqli_real_escape_string($conn, $_POST["conteudo"]);
 
-        $sql = "INSERT INTO posts(titulo, autor, conteudo, flag, id_flag) VALUES ('$titulo', '$autor', '$conteudo', 'coment', '$id')";
+        $sql = "INSERT INTO posts(titulo, user_id, autor, conteudo, flag, id_flag) VALUES ('$titulo', '$userId', '$autor', '$conteudo', 'coment', '$id')";
 
         if (mysqli_query($conn, $sql)) {
             header('Location: post.php?id=' . $id);
@@ -39,11 +37,18 @@ if(!isset($_SESSION["user_id"])){
         }
     }
 
+    if(isset($_POST["excluir"])) {
+    $id = mysqli_escape_string($conn, $_POST["excluir_id"]);
+    $sql = "DELETE FROM posts WHERE ID=$id";
 
-    mysqli_free_result($result);
-    mysqli_free_result($comments_result);
-    mysqli_close($conn);
+    if(mysqli_query($conn, $sql)) {
+        header('Location: main.php');
+    }else {
+        echo 'Erro de query: '.mysqli_error($conn);
+    }
+    }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -51,10 +56,15 @@ if(!isset($_SESSION["user_id"])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $post['titulo'] ?></title>
+    <title>Post <?= $post['ID'] ?></title>
 </head>
 
-<body>
+<body style="margin: 0; padding: 0;">
+
+    <?php 
+        include("./components/header.php");
+    ?>
+
     <?php
     if ($post) {
         ?>
@@ -72,6 +82,7 @@ if(!isset($_SESSION["user_id"])){
                 </svg>
                 <p>VOLTAR</p>
             </a>
+
             <article style="
                     display: flex;
                     width: calc(80% - 2rem);
@@ -81,8 +92,32 @@ if(!isset($_SESSION["user_id"])){
                     padding: 1rem;
                     border-radius: 1rem;
                     color: white;
-                    gap: 1rem;">
-                <h1 style="margin: 0;"><?= $post['titulo'] ?></h1>
+                    gap: 1rem;"
+            >
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <h1 style="margin: 0;"><?= $post['titulo'] ?></h1>
+                    <div style="display: flex; gap:1rem;">
+                        <?php if ($_SESSION["nome"] == $post["autor"] || $_SESSION["user_id"] == 6) { ?>
+                            <a href="/editMessage.php?id=<?= $post['ID'] ?>">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                                    <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+                                </svg>
+                            </a>
+                            <form method="POST">
+                                <input type="hidden" name="excluir_id" value="<?= $post["ID"]; ?>" />
+                                <button type="submit" name="excluir" style="
+                                    display: flex;
+                                    background-color: transparent;
+                                    border: none;
+                                    margin-bottom: -10px;
+                                    cursor: pointer;
+                                ">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+                                </button>
+                            </form>
+                        <?php } ?>
+                    </div>
+                </div>
                 <article style="
                         display: flex;
                         justify-content: space-between;
@@ -127,9 +162,32 @@ if(!isset($_SESSION["user_id"])){
                                     <p style="margin: 0;">
                                         <strong>Autor:</strong> <?= $comment['autor'] ?>
                                     </p>
-                                    <p style="margin: 0;">
-                                        <strong>Data:</strong> <?= $comment['data'] ?>
-                                    </p>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <p style="margin: 0;">
+                                            <strong>Data:</strong> <?= $comment['data'] ?>
+                                        </p> 
+                                        <div style="display: flex; gap:1rem;">
+                                            <?php if ($_SESSION["nome"] == $post["autor"] || $_SESSION["user_id"] == 6) { ?>
+                                                <a href="/editMessage.php?id=<?= $comment['ID'] ?>">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                                                        <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+                                                    </svg>
+                                                </a>
+                                                <form method="POST">
+                                                    <input type="hidden" name="excluir_id" value="<?= $post["ID"]; ?>" />
+                                                    <button type="submit" name="excluir" style="
+                                                        display: flex;
+                                                        background-color: transparent;
+                                                        border: none;
+                                                        margin-bottom: -10px;
+                                                        cursor: pointer;
+                                                    ">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
+                                                    </button>
+                                                </form>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
                                 </article>
                                 <p><?= $comment['conteudo'] ?></p>
                             </article>
@@ -159,12 +217,6 @@ if(!isset($_SESSION["user_id"])){
                             </article>
 
                             <article
-                                style="display: flex; flex-direction: column; width: 300px; justify-content: space-between;">
-                                <label for="autor">Autor</label>
-                                <input type="text" name="autor" id="autor" />
-                            </article>
-                            
-                            <article
                                 style="display: flex; flex-direction: column; width: 100%; justify-content: space-between;">
                                 <label for="conteudo">Conteúdo</label>
                                 <textarea name="conteudo" id="conteudo" rows="5" cols="40"></textarea>
@@ -186,6 +238,10 @@ if(!isset($_SESSION["user_id"])){
     } else {
         echo "<p>Post não encontrado.</p>";
     }
+    ?>
+
+    <?php 
+        include("./components/footer.php");
     ?>
 </body>
 
